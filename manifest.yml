@@ -1,0 +1,5 @@
+---
+applications:
+ - name: image-labeling
+   random-route: true
+   memory: 512MB
