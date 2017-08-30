@@ -1,0 +1,4 @@
+*.pyc
+*.pb
+*.data*
+static/uploads/*

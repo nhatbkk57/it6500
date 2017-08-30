@@ -3,6 +3,14 @@ import os
 import json
 import glob
 from uuid import uuid4
+from PIL import Image
+from tf_model import *
+
+MODEL_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
+PATH_TO_CKPT = MODEL_NAME + '/frozen_inference_graph.pb'
+print("Loading model")
+graph_model = load_model(PATH_TO_CKPT)
+print("Import model into memory")
 
 app = Flask(__name__)
 
@@ -39,17 +47,37 @@ def upload():
     for key, value in form.items():
         print key, "=>", value
 
+    results = {}
+    files = []
     for upload in request.files.getlist("file"):
+        img = Image.open(upload.stream)        
         filename = upload.filename.rsplit("/")[0]
+        files.append(filename)
+        
+        results[filename] = predict_single_label(img,graph_model)
+        
+        (im_width, im_height) = img.size
+        # results[filename]['width'] = im_width
+        # results[filename]['height'] = im_height
+
         destination = "/".join([target, filename])
         print "Accept incoming file:", filename
         print "Save it to:", destination
-        upload.save(destination)
+        img.save(destination)
 
-    if is_ajax:
-        return ajax_response(True, upload_key)
-    else:
-        return redirect(url_for("upload_complete", uuid=upload_key))
+    print(results)
+
+    return render_template("list_views.html",
+        uuid=upload_key,
+        files=files,
+        labels=results
+    )
+
+    # if is_ajax:
+    #     return ajax_response(True, upload_key)
+    # else:
+    #     return view_image_with_label(uuid,results)
+
 
 
 @app.route("/files/<uuid>")
@@ -78,3 +106,22 @@ def ajax_response(status, msg):
         status=status_code,
         msg=msg,
     ))
+
+def view_image_with_label(uuid,labels):
+    """The location we send them to at the end of the upload."""
+
+    # Get their files.
+    root = "uploadr/static/uploads/{}".format(uuid)
+    if not os.path.isdir(root):
+        return "Error: UUID not found!"
+
+    files = []
+    for file in glob.glob("{}/*.*".format(root)):
+        fname = file.split(os.sep)[-1]
+        files.append(fname)
+
+    return render_template("list_views.html",
+        uuid=uuid,
+        files=files,
+        labels = labels
+    )

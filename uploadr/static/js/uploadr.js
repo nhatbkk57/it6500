@@ -81,20 +81,21 @@ function doUpload() {
         data: fd,
         success: function(data) {
             $progressBar.css({"width": "100%"});
-            data = JSON.parse(data);
-
+            // data = JSON.parse(data);
+            $("#results_view").append(data)
             // How'd it go?
-            if (data.status === "error") {
-                // Uh-oh.
-                window.alert(data.msg);
-                $("#upload-form :input").removeAttr("disabled");
-                return;
-            }
-            else {
-                // Ok! Get the UUID.
-                var uuid = data.msg;
-                window.location = NEXT_URL + uuid;
-            }
+            // if (data.status === "error") {
+            //     // Uh-oh.
+            //     window.alert(data.msg);
+            //     $("#upload-form :input").removeAttr("disabled");
+            //     return;
+            // }
+            // else {
+            //     // Ok! Get the UUID.
+            //     // var uuid = data.msg;
+            //     // window.location = NEXT_URL + uuid;
+            //     $("#results_view").append(data)
+            // }
         },
     });
 }
