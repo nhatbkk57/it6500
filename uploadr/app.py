@@ -2,14 +2,15 @@ from flask import Flask, request, redirect, url_for, render_template
 import os
 import json
 import glob
-from uuid import uuid4
+from uuid import uuid4 
 from PIL import Image
-from tf_model import *
+# from tf_model import *
+from storage import Storage
 
 MODEL_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
 PATH_TO_CKPT = MODEL_NAME + '/frozen_inference_graph.pb'
 print("Loading model")
-graph_model = load_model(PATH_TO_CKPT)
+# graph_model = load_model(PATH_TO_CKPT)
 print("Import model into memory")
 
 app = Flask(__name__)
@@ -19,6 +20,10 @@ app = Flask(__name__)
 def index():
     return render_template("index.html")
 
+@app.route("/storage")
+def test_storage():
+    storage = Storage()
+    return json.dumps(storage.list_object())
 
 @app.route("/upload", methods=["POST"])
 def upload():
@@ -34,36 +39,39 @@ def upload():
         is_ajax = True
 
     # Target folder for these uploads.
-    target = "uploadr/static/uploads/{}".format(upload_key)
-    try:
-        os.mkdir(target)
-    except:
-        if is_ajax:
-            return ajax_response(False, "Couldn't create upload directory: {}".format(target))
-        else:
-            return "Couldn't create upload directory: {}".format(target)
-
-    print "=== Form Data ==="
-    for key, value in form.items():
-        print key, "=>", value
+    # target = "uploadr/static/uploads/{}".format(upload_key)
+    # try:
+    #     os.mkdir(target)
+    # except:
+    #     if is_ajax:
+    #         return ajax_response(False, "Couldn't create upload directory: {}".format(target))
+    #     else:
+    #         return "Couldn't create upload directory: {}".format(target)
 
     results = {}
     files = []
+    storage = Storage()
     for upload in request.files.getlist("file"):
-        img = Image.open(upload.stream)        
         filename = upload.filename.rsplit("/")[0]
+        storage.put(filename,upload.stream)
         files.append(filename)
-        
-        results[filename] = predict_single_label(img,graph_model)
-        
-        (im_width, im_height) = img.size
-        # results[filename]['width'] = im_width
-        # results[filename]['height'] = im_height
 
-        destination = "/".join([target, filename])
-        print "Accept incoming file:", filename
-        print "Save it to:", destination
-        img.save(destination)
+    # for upload in request.files.getlist("file"):
+    #     print upload
+    #     img = Image.open(upload.stream)        
+    #     filename = upload.filename.rsplit("/")[0]
+    #      
+    #     
+    #     results[filename] = predict_single_label(img,graph_model)
+        
+    #     (im_width, im_height) = img.size 
+    #     # results[filename]['width'] = im_width
+    #     # results[filename]['height'] = im_height
+
+    #     destination = "/".join([target, filename])
+    #     print "Accept incoming file:", filename
+    #     print "Save it to:", destination
+    #     img.save(destination)
 
     print(results)
 
@@ -125,3 +133,10 @@ def view_image_with_label(uuid,labels):
         files=files,
         labels = labels
     )
+
+@app.route("/getobject/<file_name>")
+def get_object(file_name):
+    storage = Storage()
+    obj = storage.get(file_name)
+    with open(file_name, 'w') as my_copy:
+        my_copy.write(obj[1]) 
