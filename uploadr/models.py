@@ -31,6 +31,7 @@ class ImageStorage(DeclarativeBase):
 	meta_labels = Column(JSON)
 	width = Column(Integer)
 	height = Column(Integer)
+	
 
 class ImageLabel(DeclarativeBase):
 

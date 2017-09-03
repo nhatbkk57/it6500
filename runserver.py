@@ -6,7 +6,7 @@ import sys
 import argparse
 
 
-
+from download_model import download_tensorflow_model
 from uploadr.app import app
 
 parser = argparse.ArgumentParser(description="Uploadr")
@@ -19,7 +19,10 @@ parser.add_argument(
 args = parser.parse_args()
 
 if __name__ == '__main__':
-    flask_options = dict(
+
+    download_tensorflow_model()
+    
+    flask_options = dict(   
         host='0.0.0.0',
         debug=True,
         port=args.port,
