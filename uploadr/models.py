@@ -22,8 +22,8 @@ class User(DeclarativeBase):
 	user_name = Column(String)
 
 
-class Storage(DeclarativeBase):
-	__tablename__ = 'storage'
+class ImageStorage(DeclarativeBase):
+	__tablename__ = 'image_storage'
 	photo_id = Column(String,primary_key=True)
 	photo_link = Column(Text)
 	created_at = Column(DateTime)
@@ -41,7 +41,7 @@ class ImageLabel(DeclarativeBase):
 	# lower_case standard
 	label_text = Column(String)
 	bound_bnx = Column(JSON)
-	confidence = Column(JSON)
+	confidence = Column(Float)
 
 
 def syncdb():
@@ -49,6 +49,13 @@ def syncdb():
  
     DeclarativeBase.metadata.create_all(engine)
 
+def save(list_objects):
+	try:	
+		for item in list_objects:
+			Session.add(item)
+		Session.commit()
+	except Exception as e:
+		print(e)
     # Query
     # Session.execute('select * from events')
     # engine.execute(vipul.insert(), id=1, name='ddd', fullname='swee')

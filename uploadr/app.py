@@ -2,15 +2,23 @@ from flask import Flask, request, redirect, url_for, render_template
 import os
 import json
 import glob
-from uuid import uuid4 
+from uuid import uuid4
+from hashlib import md5 
 from PIL import Image
-# from tf_model import *
+import logging
+from datetime import datetime
+
+from tf_model import *
+from models import ImageStorage, ImageLabel, Session
 from storage import Storage
+
+logging.basicConfig(level=logging.DEBUG)
+LOGGER = logging.getLogger(__name__)
 
 MODEL_NAME = 'ssd_mobilenet_v1_coco_11_06_2017'
 PATH_TO_CKPT = MODEL_NAME + '/frozen_inference_graph.pb'
 print("Loading model")
-# graph_model = load_model(PATH_TO_CKPT)
+graph_model = load_model(PATH_TO_CKPT)
 print("Import model into memory")
 
 app = Flask(__name__)
@@ -39,39 +47,55 @@ def upload():
         is_ajax = True
 
     # Target folder for these uploads.
-    # target = "uploadr/static/uploads/{}".format(upload_key)
-    # try:
-    #     os.mkdir(target)
-    # except:
-    #     if is_ajax:
-    #         return ajax_response(False, "Couldn't create upload directory: {}".format(target))
-    #     else:
-    #         return "Couldn't create upload directory: {}".format(target)
+    target = "uploadr/static/uploads/{}".format(upload_key)
+    try:
+        os.mkdir(target)
+    except:
+        if is_ajax:
+            return ajax_response(False, "Couldn't create upload directory: {}".format(target))
+        else:
+            return "Couldn't create upload directory: {}".format(target)
 
     results = {}
     files = []
-    storage = Storage()
-    for upload in request.files.getlist("file"):
-        filename = upload.filename.rsplit("/")[0]
-        storage.put(filename,upload.stream)
-        files.append(filename)
-
+    # storage = Storage()
     # for upload in request.files.getlist("file"):
-    #     print upload
-    #     img = Image.open(upload.stream)        
     #     filename = upload.filename.rsplit("/")[0]
-    #      
-    #     
-    #     results[filename] = predict_single_label(img,graph_model)
-        
-    #     (im_width, im_height) = img.size 
-    #     # results[filename]['width'] = im_width
-    #     # results[filename]['height'] = im_height
+    #     storage.put(filename,upload.stream)
+    #     files.append(filename)
 
-    #     destination = "/".join([target, filename])
-    #     print "Accept incoming file:", filename
-    #     print "Save it to:", destination
-    #     img.save(destination)
+    for upload in request.files.getlist("file"):
+        print upload
+        img = Image.open(upload.stream)        
+        filename = upload.filename.rsplit("/")[0]
+        results[filename] = predict_single_label(img,graph_model)
+        (im_width, im_height) = img.size
+        photo_id = md5(filename).hexdigest()
+        image_metadata = ImageStorage(photo_id=photo_id,
+            photo_link=filename,
+            created_at=datetime.now(),
+            user_id=1,
+            meta_labels="",
+            width=im_width,
+            height=im_height)
+        Session.add(image_metadata)
+        for item in results[filename]:
+            score = float(item['score'])
+            class_name = item['class']
+            image_label = ImageLabel(photo_id=photo_id,
+                label_id = 1,
+                label_text = class_name,
+                bound_bnx ="",
+                confidence=score)
+            Session.add(image_label)
+
+        destination = "/".join([target, filename])
+        print "Accept incoming file:", filename
+        print "Save it to:", destination
+        img.save(destination)
+    Session.commit()
+        # Add to PostgresSQL
+
 
     print(results)
 
