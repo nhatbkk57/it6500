@@ -5,5 +5,5 @@ numpy
 Flask-SQLAlchemy===2.1 
 Flask-Migrate==1.8.0
 pillow
-pip install python-keystoneclient
-pip install python-swiftclient
+python-swiftclient
+python-keystoneclient

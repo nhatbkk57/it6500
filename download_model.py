@@ -14,12 +14,15 @@ PATH_TO_CKPT = MODEL_NAME + '/frozen_inference_graph.pb'
 
 
 # Download model
-opener = urllib.request.URLopener()
-opener.retrieve(DOWNLOAD_BASE + MODEL_FILE, MODEL_FILE)
-tar_file = tarfile.open(MODEL_FILE)
-for file in tar_file.getmembers():
-  file_name = os.path.basename(file.name)
-  if 'frozen_inference_graph.pb' in file_name:
-    tar_file.extract(file, os.getcwd())
+def download_tensorflow_model():
+	if os.path.exists(MODEL_NAME)==False:
+		opener = urllib.request.URLopener()
+		opener.retrieve(DOWNLOAD_BASE + MODEL_FILE, MODEL_FILE)
+		tar_file = tarfile.open(MODEL_FILE)
+		for file in tar_file.getmembers():
+		  file_name = os.path.basename(file.name)
+		  if 'frozen_inference_graph.pb' in file_name:
+		    tar_file.extract(file, os.getcwd())
 
-os.remove(MODEL_FILE)
+		os.remove(MODEL_FILE)
+	print("Model already exists")
