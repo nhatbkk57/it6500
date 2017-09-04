@@ -55,24 +55,11 @@ def upload():
         filename = upload.filename.rsplit("/")[0]
         storage.put(filename,upload.stream)
         files.append(filename)
-
-    # for upload in request.files.getlist("file"):
-    #     print upload
-    #     img = Image.open(upload.stream)        
-    #     filename = upload.filename.rsplit("/")[0]
-    #      
-    #     
-    #     results[filename] = predict_single_label(img,graph_model)
+        results[filename] = predict_single_label(img,graph_model)
         
-    #     (im_width, im_height) = img.size 
-    #     # results[filename]['width'] = im_width
-    #     # results[filename]['height'] = im_height
-
-    #     destination = "/".join([target, filename])
-    #     print "Accept incoming file:", filename
-    #     print "Save it to:", destination
-    #     img.save(destination)
-
+        (im_width, im_height) = img.size 
+        # results[filename]['width'] = im_width
+        # results[filename]['height'] = im_height
     print(results)
 
     return render_template("list_views.html",
@@ -81,10 +68,10 @@ def upload():
         labels=results
     )
 
-    # if is_ajax:
-    #     return ajax_response(True, upload_key)
-    # else:
-    #     return view_image_with_label(uuid,results)
+    if is_ajax:
+        return ajax_response(True, upload_key)
+    else:
+        return view_image_with_label(uuid,results)
 
 
 
@@ -138,5 +125,12 @@ def view_image_with_label(uuid,labels):
 def get_object(file_name):
     storage = Storage()
     obj = storage.get(file_name)
-    with open(file_name, 'w') as my_copy:
-        my_copy.write(obj[1]) 
+    files = []
+    img = {}
+    if obj:
+        img["file_name"] = file_name
+        img["file_url"] = 'https://objectstorage-ui.ng.bluemix.net/v2/service_instances/2d244042-a005-427f-aa2d-e6234a826ca1/region/dallas/container/guest/'+file_name
+        files.append(img)
+        return render_template("object.html",
+        files=files,
+    )
