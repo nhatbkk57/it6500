@@ -3,11 +3,19 @@
 from __future__ import unicode_literals
 
 import sys
+import logging
 import argparse
+
+logging.basicConfig(level=logging.INFO)
+LOGGER = logging.getLogger(__name__)
 
 
 from download_model import download_tensorflow_model
+download_tensorflow_model()
+
+
 from uploadr.app import app
+
 
 parser = argparse.ArgumentParser(description="Uploadr")
 parser.add_argument(
@@ -17,10 +25,7 @@ parser.add_argument(
     default=8080,
 )
 args = parser.parse_args()
-
 if __name__ == '__main__':
-
-    download_tensorflow_model()
     
     flask_options = dict(   
         host='0.0.0.0',
