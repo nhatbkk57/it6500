@@ -30,8 +30,8 @@ class Storage(object):
                         "user_id": user_id,
                         "region_name": region_name})
         self.container_name = container_name
-    def put(self, file_name, content):
-        self.conn.put_object(self.container_name,file_name,content,content_type='image/png')
+    def put(self, file_name, content, contenttype):
+        self.conn.put_object(self.container_name,file_name,content, content_type='image/jpeg')
     def get(self,file_name):
         obj = self.conn.get_object(self.container_name, file_name)
         return obj

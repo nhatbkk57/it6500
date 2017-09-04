@@ -65,12 +65,12 @@ def upload():
     #     files.append(filename)
 
     for upload in request.files.getlist("file"):
-        print upload
+        print upload.content_type
         img = Image.open(upload.stream)        
         filename = upload.filename.rsplit("/")[0]
         results[filename] = predict_single_label(img,graph_model)
         (im_width, im_height) = img.size
-        photo_id = md5(filename).hexdigest()
+        photo_id = md5(filename+ str(datetime.now())).hexdigest()
         image_metadata = ImageStorage(photo_id=photo_id,
             photo_link=filename,
             created_at=datetime.now(),
@@ -89,10 +89,24 @@ def upload():
                 confidence=score)
             Session.add(image_label)
 
+        #Save to local
         destination = "/".join([target, filename])
         print "Accept incoming file:", filename
         print "Save it to:", destination
         img.save(destination)
+
+        #Put to storage
+        storage = Storage()
+        print "Storing to cloud storage - container", storage.container_name
+        with open(destination, 'r') as temp_img:
+            storage.conn.put_object(
+                'guest',
+                photo_id,
+                contents=temp_img,
+                content_type=upload.content_type
+            )
+        print "Done"
+
     Session.commit()
         # Add to PostgresSQL
     print(results)
@@ -103,10 +117,10 @@ def upload():
         labels=results
     )
 
-    if is_ajax:
-        return ajax_response(True, upload_key)
-    else:
-        return view_image_with_label(uuid,results)
+    # if is_ajax:
+    #     return ajax_response(True, upload_key)
+    # else:
+    #     return view_image_with_label(uuid,results)
 
 
 
