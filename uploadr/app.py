@@ -23,11 +23,36 @@ print("Import model into memory")
 
 app = Flask(__name__)
 
-
+@app.route("/uploads")
+def uploads():
+    return render_template("upload.html")
 @app.route("/")
 def index():
-    return render_template("index.html")
-
+    storage = Storage()
+    records = ImageStorage.query.all()
+    images = []
+    #TEST
+    for record in records:
+        print record.photo_id
+        try:
+            obj = storage.get(record.photo_id)
+        except:
+            print "Oops!  Object not exist"
+            continue
+        if obj:
+            image = {}
+            image["photo_id"] = record.photo_id
+            image["photo_name"] = record.photo_link
+            image["photo_des"] = "Photo Description"
+            target = "uploadr/static/uploads/{}".format(image["photo_id"])
+            try:
+                with open(target, 'w') as temp:
+                    temp.write(obj[1])
+                images.append(image)
+            except:
+                print "Oops!  Store error.  Try again..."
+                continue
+    return render_template("index.html",images=images)
 @app.route("/storage")
 def test_storage():
     storage = Storage()
@@ -170,15 +195,17 @@ def view_image_with_label(uuid,labels):
         labels = labels
     )
 
-@app.route("/getobject/<file_name>")
-def get_object(file_name):
+@app.route("/image/<file_name>")
+def image(file_name):
     storage = Storage()
     obj = storage.get(file_name)
     files = []
     img = {}
     if obj:
-        img["file_name"] = file_name
-        img["file_url"] = 'https://objectstorage-ui.ng.bluemix.net/v2/service_instances/2d244042-a005-427f-aa2d-e6234a826ca1/region/dallas/container/guest/'+file_name
+        img["photo_id"] = file_name
+        img["photo_name"] = "Photo Name"
+        img["photo_des"] = "Photo Description"
+        img["photo_source"] = 'https://objectstorage-ui.ng.bluemix.net/v2/service_instances/2d244042-a005-427f-aa2d-e6234a826ca1/region/dallas/container/guest/'+file_name
         files.append(img)
         return render_template("object.html",
         files=files,

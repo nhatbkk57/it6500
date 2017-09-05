@@ -2,7 +2,9 @@ import os
 import json
 import keystoneclient.v3 as keystoneclient
 import swiftclient.client as swiftclient
-
+import hmac
+from hashlib import sha1
+from time import time
 class Storage(object):
     def __init__(self,container_name="guest"):
         # cloudant_service = json.loads(os.environ['VCAP_SERVICES'])['Object-Storage'][0]
@@ -33,8 +35,12 @@ class Storage(object):
     def put(self, file_name, content, contenttype):
         self.conn.put_object(self.container_name,file_name,content, content_type='image/jpeg')
     def get(self,file_name):
-        obj = self.conn.get_object(self.container_name, file_name)
-        return obj
+        try:
+            obj = self.conn.get_object(self.container_name, file_name)
+            return obj
+        except:
+            print "Oops!  Object not exist"
+            return None
     def create_container(self,container_name):
         self.conn.put_container(container_name)
         self.container_name = container_name
@@ -61,3 +67,14 @@ class Storage(object):
         # To delete a container. Note: The container must be empty!
         self.conn.delete_container(container_name)
         print "\nContainer %s deleted successfully.\n" % container_name
+
+    # def tempURL(self,file_name):
+    #     method = 'GET'
+    #     duration_in_seconds = 60*60*3
+    #     expires = int(time() + duration_in_seconds)
+    #     path = '/v1/AUTH_test/%s/%s' % (self.container_name, file_name)
+    #     key = 'nhatbkk57'
+    #     hmac_body = '%s\n%s\n%s' % (method, expires, path)
+    #     sig = hmac.new(key, hmac_body, sha1).hexdigest()
+    #     s = 'https://{host}/{path}?temp_url_sig={sig}&temp_url_expires={expires}'
+    #     url = s.format(host=self.url, path=path, sig=sig, expires=expires)
