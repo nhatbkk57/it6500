@@ -1,6 +1,6 @@
 flask
 psycopg2
-https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.3.0-cp27-none-linux_x86_64.whl
+tensorflow==1.0.1
 numpy
 Flask-SQLAlchemy===2.1 
 Flask-Migrate==1.8.0
